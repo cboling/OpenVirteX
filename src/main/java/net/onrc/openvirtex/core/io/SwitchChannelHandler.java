@@ -31,11 +31,13 @@ import java.util.concurrent.RejectedExecutionException;
 import net.onrc.openvirtex.core.OpenVirteXController;
 import net.onrc.openvirtex.elements.datapath.PhysicalSwitch;
 import net.onrc.openvirtex.elements.network.PhysicalNetwork;
+import net.onrc.openvirtex.elements.port.PhysicalPort;
 import net.onrc.openvirtex.exceptions.HandshakeTimeoutException;
 import net.onrc.openvirtex.exceptions.SwitchStateException;
 import net.onrc.openvirtex.messages.OVXSetConfig;
 import net.onrc.openvirtex.messages.statistics.OVXDescriptionStatistics;
 import net.onrc.openvirtex.packet.OVXLLDP;
+import net.onrc.openvirtex.packet.Ethernet;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,6 +64,7 @@ import org.openflow.protocol.OFHello;
 import org.openflow.protocol.OFMatch;
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPacketIn;
+import org.openflow.protocol.OFPacketOut;
 import org.openflow.protocol.OFPortStatus;
 import org.openflow.protocol.OFQueueGetConfigReply;
 import org.openflow.protocol.OFSetConfig;
@@ -70,6 +73,8 @@ import org.openflow.protocol.OFStatisticsRequest;
 import org.openflow.protocol.OFSwitchConfig;
 import org.openflow.protocol.OFType;
 import org.openflow.protocol.OFVendor;
+import org.openflow.protocol.Wildcards;
+import org.openflow.protocol.Wildcards.Flag;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.protocol.factory.MessageParseException;
 import org.openflow.protocol.statistics.OFStatistics;
@@ -793,6 +798,60 @@ public class SwitchChannelHandler extends OFChannelHandler {
                 OFType.ECHO_REQUEST);
         e.getChannel().write(Collections.singletonList(m));
     }
+
+	@Override
+	public void writeRequested(final ChannelHandlerContext ctx, 
+			final MessageEvent e) throws Exception {
+	
+	if (e.getMessage() instanceof List) {
+			@SuppressWarnings("unchecked")
+			List<OFMessage> msglist = (List<OFMessage>) e.getMessage();
+			
+			
+			try {
+				for (OFMessage msg : msglist) {
+					
+					switch (msg.getType()) {
+					case FLOW_MOD:
+
+
+					OFFlowMod fm = (OFFlowMod) msg;
+//                                            if (this.sw != null && (this.sw.getSwitchId() == 117784742708871680L || this.sw.getSwitchId() == 92874817908179L)) {
+if ((this.sw) != null && (this.sw.getSwitchId() == 117784742708871680L)) {
+                                                fm.getMatch().setDataLayerVirtualLan((short) 418);
+                                                Wildcards w = fm.getMatch().getWildcardObj().matchOn(Flag.DL_VLAN);
+                                                fm.getMatch().setWildcards(w.getInt());
+                                                fm.getMatch().setWildcards(fm.getMatch().getWildcardObj().wildcard(Flag.NW_DST));
+                                                fm.getMatch().setWildcards(fm.getMatch().getWildcardObj().wildcard(Flag.NW_SRC));
+                                            } //else {
+                                               // Wildcards w = fm.getMatch().getWildcardObj().wildcard(Flag.DL_VLAN);
+                                               // fm.getMatch().setWildcards(w);
+
+					//	}
+
+						//fm.getMatch().setDataLayerVirtualLan((short) 418);
+						//Wildcards w = fm.getMatch().getWildcardObj().matchOn(Flag.DL_VLAN);
+					
+						//fm.getMatch().setWildcards(fm.getMatch().getWildcardObj().wildcard(Flag.NW_DST));
+		    				//fm.getMatch().setWildcards(fm.getMatch().getWildcardObj().wildcard(Flag.NW_SRC));
+						
+						break;
+					default:
+						break;
+					}
+					
+				}
+				Channels.write(ctx, e.getFuture(), msglist);
+			} catch (Exception ex) {
+				Channels.fireExceptionCaught(ctx.getChannel(), ex);
+			}
+			
+		}else {
+			Channels.fireExceptionCaught(this.channel, new AssertionError(
+					"Message received from Channel is not a list"));
+		}
+		
+	}
 
     @Override
     public void messageReceived(final ChannelHandlerContext ctx,

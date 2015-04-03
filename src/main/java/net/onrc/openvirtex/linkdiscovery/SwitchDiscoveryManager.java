@@ -70,7 +70,7 @@ public class SwitchDiscoveryManager implements LLDPEventHandler, OVXSendMsg,
     // number of unacknowledged probes per port
     private final Map<Short, AtomicInteger> portProbeCount;
     // number of probes to send before link is removed
-    private static final short MAX_PROBE_COUNT = 3;
+    private static final short MAX_PROBE_COUNT = 10;
     private Iterator<Short> slowIterator;
     private final OVXMessageFactory ovxMessageFactory = OVXMessageFactory
             .getInstance();
@@ -192,7 +192,7 @@ public class SwitchDiscoveryManager implements LLDPEventHandler, OVXSendMsg,
                     this.portProbeCount.put(portNumber, new AtomicInteger(0));
                 } else {
                     if (this.fastPorts.contains(portNumber)) {
-                        this.portProbeCount.get(portNumber).decrementAndGet();
+                        this.portProbeCount.get(portNumber).set(0);
                     } else {
                         this.log.debug(
                                 "Got ackProbe for non-existing port: {}",

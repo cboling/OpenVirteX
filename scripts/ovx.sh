@@ -12,6 +12,7 @@ JVM_OPTS="$JVM_OPTS -XX:+UseCompressedOops"
 JVM_OPTS="$JVM_OPTS -XX:+UseConcMarkSweepGC -XX:+AggressiveOpts -XX:+UseFastAccessorMethods"
 JVM_OPTS="$JVM_OPTS -XX:MaxInlineSize=8192 -XX:FreqInlineSize=8192" 
 JVM_OPTS="$JVM_OPTS -XX:CompileThreshold=1500 -XX:PreBlockSpin=8" 
+JVM_OPTS="$JVM_OPTS -XX:ReservedCodeCacheSize=512m"
 
 if [ ! -e ${OVX_JAR} ]; then
   cd ${OVXHOME}
